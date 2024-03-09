@@ -2,6 +2,9 @@ const express = require("express");
 const WebSocket = require("ws");
 const bodyParser = require("body-parser");
 const http = require("http");
+const connectToDb = require("./config/db");
+const errorHandler = require("./middleware/error");
+// const dotenv = require("dotenv");
 
 const app = express();
 const server = http.createServer(app);
@@ -23,20 +26,20 @@ wss.on("connection", (ws) => {
   // Handle incoming messages from WebSocket clients
   ws.on("message", (message) => {
     const parsedMessage = JSON.parse(message);
-    const { action, room, data } = parsedMessage;
+    const { action, issueId, data } = parsedMessage;
 
     switch (action) {
       case "join":
-        ws.room = room;
+        ws.issueId = issueId;
         break;
 
       case "broadcast":
         console.log("boardcasting the message", data);
-        // Broadcast message to all clients in the room
+        // Broadcast message to all clients in the issueId
         wss.clients.forEach((client) => {
           if (
             client !== ws &&
-            client.room === room &&
+            client.issueId === issueId &&
             client.readyState === WebSocket.OPEN
           ) {
             client.send(JSON.stringify(data));
@@ -45,7 +48,7 @@ wss.on("connection", (ws) => {
         break;
 
       case "leave":
-        delete ws.room;
+        delete ws.issueId;
         break;
 
       default:
@@ -60,11 +63,16 @@ wss.on("connection", (ws) => {
   });
 });
 
+// dotenv.config({ path: "./config/config.env" });
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // parse application/json
 app.use(bodyParser.json());
+
+connectToDb();
+
+app.use(errorHandler);
 
 app.use("/api/v1", activity, messages);
 app.use("/api/v1/issues", issues);
