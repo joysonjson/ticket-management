@@ -8,9 +8,10 @@ const {
   getMessageForTheIssue,
 } = require("../controller/issue");
 
-router.route("/").post(createIssue);
-router.route("/").get(getOpenIssues);
-router.route("/:id").get(getIssueDetails);
-router.route("/user/:userId").get(getOpenIssues);
-
-module.exports = router;
+module.exports = function (wss) {
+  router.post("/", createIssue(wss));
+  router.route("/").get(getOpenIssues);
+  router.route("/:id").get(getIssueDetails);
+  router.route("/user/:userId").get(getOpenIssues);
+  return router;
+};

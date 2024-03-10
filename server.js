@@ -11,7 +11,7 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 const issues = require("./router/issues");
-const issue = require("./router/issue");
+const issue = require("./router/issue")(wss);
 const activity = require("./router/activity");
 // const messages = require("./router/message");
 const messages = require("./router/message")(wss);
