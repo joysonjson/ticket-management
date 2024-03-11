@@ -3,13 +3,6 @@ const { Message } = require("../model/message");
 
 exports.addMessage = (wss) =>
   asyncHandler(async (req, res, next) => {
-    const { message, issueId } = req.body;
-    wss.clients.forEach((client) => {
-      if (client.issueId == issueId && client.readyState === 1) {
-        console.log("boardcasting message", message, issueId);
-        client.send(JSON.stringify(message));
-      }
-    });
     try {
       // Extract data from the request body
       const { issueId, isAdmin, content } = req.body;
@@ -19,6 +12,38 @@ exports.addMessage = (wss) =>
 
       // Save the message to the database
       await message.save();
+
+      console.log("wss clients", wss.clients);
+      wss.clients.forEach((client) => {
+        // Check if the client is an admin and their connection is open
+        if (client.isAdmin && client.readyState === 1) {
+          // Send the message to all clients except the one who sent it
+          if (client !== wss) {
+            client.send(
+              JSON.stringify({
+                event: "message",
+                data: message,
+              })
+            );
+          }
+        }
+        // Check if the client's issueId matches the one from the API body
+        else if (
+          client.issueId === issueId &&
+          isAdmin &&
+          client.readyState === 1
+        ) {
+          // Send the message to all clients with the same issueId except the one who sent it
+          if (client !== wss) {
+            client.send(
+              JSON.stringify({
+                event: "message",
+                data: message,
+              })
+            );
+          }
+        }
+      });
 
       // Return a success response
       res.status(201).json({ success: true, message });

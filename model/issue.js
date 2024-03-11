@@ -2,13 +2,8 @@ const mongoose = require("mongoose");
 
 // Define the Issue schema
 const issueSchema = new mongoose.Schema({
-  //   _id: {
-  //     type: String,
-  //     required: true,
-  //     unique: true,
-  //   },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     required: true,
   },
   status: {
@@ -16,14 +11,16 @@ const issueSchema = new mongoose.Schema({
     enum: ["open", "closed"],
     default: "open", // Set default value to 'open'
   },
-  // Add other fields as needed
+  initialMessage: {
+    type: String,
+    required: true,
+  }, // Embed the messageSchema directly in the issueSchema
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-// Create models based on the schemas
 const Issue = mongoose.model("Issue", issueSchema);
 
 module.exports = { Issue };
